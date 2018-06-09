@@ -28,7 +28,7 @@
   </extensions>
 
   <actions>
-    <action class="net.yeputons.gumtreepsi.DemoAction" id="GumTreeDemo.DemoAction" text="Gum Tree Demo Action">
+    <action class="net.yeputons.intellij.bssr.gumtreedemo.DemoAction" id="GumTreeDemo.DemoAction" text="Gum Tree Demo Action">
       <add-to-group group-id="EditorPopupMenu" anchor="last" />
     </action>
   </actions>
