@@ -11,6 +11,7 @@ import com.intellij.structuralsearch.impl.matcher.MatcherImplUtil;
 import com.intellij.structuralsearch.impl.matcher.PatternTreeContext;
 import com.intellij.structuralsearch.plugin.replace.ReplaceOptions;
 import com.intellij.structuralsearch.plugin.util.CollectingMatchResultSink;
+import com.intellij.structuralsearch.plugin.util.DuplicateFilteringResultSink;
 import org.testng.reporters.Files;
 
 import java.io.File;
