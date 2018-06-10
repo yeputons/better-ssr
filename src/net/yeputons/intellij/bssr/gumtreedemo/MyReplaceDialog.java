@@ -23,6 +23,7 @@ import com.intellij.structuralsearch.plugin.replace.ReplaceOptions;
 import com.intellij.structuralsearch.plugin.replace.ui.ReplaceConfiguration;
 import com.intellij.structuralsearch.plugin.replace.ui.ReplaceDialog;
 import com.intellij.structuralsearch.plugin.ui.SearchContext;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -47,6 +48,12 @@ public class MyReplaceDialog extends ReplaceDialog {
         final Project project = this.searchContext.getProject();
         MatchOptions matchOptions = myConfiguration.getMatchOptions();
         ReplaceOptions replaceOptions = ((ReplaceConfiguration)myConfiguration).getReplaceOptions();
+        CompiledReplacement r = compileReplacement(project, matchOptions, replaceOptions);
+        new MyReplaceCommand(myConfiguration, searchContext, r).startSearching();
+    }
+
+    @NotNull
+    private static CompiledReplacement compileReplacement(Project project, MatchOptions matchOptions, ReplaceOptions replaceOptions) {
         StructuralSearchProfile profile = StructuralSearchUtil.getProfileByFileType(matchOptions.getFileType());
         assert profile != null;
 
@@ -91,7 +98,7 @@ public class MyReplaceDialog extends ReplaceDialog {
             }
             System.out.println(wr);
         }
-        new MyReplaceCommand(myConfiguration, searchContext, r).startSearching();
+        return r;
     }
 
     private static ITree nodesToTree(TreeContext context, NodeIterator it, Map<String, Integer> typesMapping) {
