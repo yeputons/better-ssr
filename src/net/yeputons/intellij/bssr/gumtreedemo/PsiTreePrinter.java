@@ -38,7 +38,7 @@ public class PsiTreePrinter {
         offset += 2;
         boolean hasChild = false;
         for (PsiElement child = e.getFirstChild(); child != null; child = child.getNextSibling()) {
-            if (MyReplaceDialog.ignorePsiElement(child)) continue;
+            if (MyReplacementCompiler.ignorePsiElement(child)) continue;
             sb.append("\n");
             hasChild = true;
             print(child);

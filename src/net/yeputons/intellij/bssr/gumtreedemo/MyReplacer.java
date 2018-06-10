@@ -147,7 +147,7 @@ public class MyReplacer {
             }
 
             private void addSubtrees(PsiElement replaceNode) {
-                if (MyReplaceDialog.ignorePsiElement(replaceNode)) return;
+                if (MyReplacementCompiler.ignorePsiElement(replaceNode)) return;
                 ITree replaceItree = replaceToItree.get(replaceNode);
                 assert replaceItree != null;
                 if (!replacement.mappings.hasDst(replaceItree)) {
@@ -222,7 +222,7 @@ public class MyReplacer {
                 addedElementToITree.putValue(added, replaceItree);
                 List<PsiElement> children = new ArrayList<>();
                 for (PsiElement child = added.getFirstChild(); child != null; child = child.getNextSibling()) {
-                    if (MyReplaceDialog.ignorePsiElement(child)) continue;
+                    if (MyReplacementCompiler.ignorePsiElement(child)) continue;
                     children.add(child);
                 }
                 assert replaceItree.getChildren().size() == children.size();
@@ -232,7 +232,7 @@ public class MyReplacer {
             }
 
             private void moveSubtrees(PsiElement replaceNode) {
-                if (MyReplaceDialog.ignorePsiElement(replaceNode)) return;
+                if (MyReplacementCompiler.ignorePsiElement(replaceNode)) return;
                 ITree replaceItree = replaceToItree.get(replaceNode);
                 assert replaceItree != null;
                 if (replacement.mappings.hasDst(replaceItree)) {
@@ -326,7 +326,7 @@ public class MyReplacer {
             }
 
             private void removeSubtrees(PsiElement oldSearchNode) {
-                if (MyReplaceDialog.ignorePsiElement(oldSearchNode)) return;
+                if (MyReplacementCompiler.ignorePsiElement(oldSearchNode)) return;
                 PsiElement newSearchNode = oldSearchPatternToNew.get(oldSearchNode);
                 assert newSearchNode != null;
                 ITree searchItree = oldSearchToItree.get(oldSearchNode);
