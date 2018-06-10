@@ -11,5 +11,4 @@ public class CompiledReplacement {
     public CompiledPattern searchPattern, replacePattern;
     public TreeContext searchTreeContext, replaceTreeContext;
     public MappingStore mappings;
-    public List<Action> actions;
 }

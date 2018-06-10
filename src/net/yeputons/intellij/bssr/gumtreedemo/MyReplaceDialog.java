@@ -90,7 +90,6 @@ public class MyReplaceDialog extends ReplaceDialog {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            r.actions = g.getActions();
             System.out.println(wr);
         }
         new MyReplaceCommand(myConfiguration, searchContext, r).startSearching();
