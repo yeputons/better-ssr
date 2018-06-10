@@ -11,7 +11,11 @@ import com.intellij.structuralsearch.impl.matcher.MatcherImplUtil;
 import com.intellij.structuralsearch.impl.matcher.PatternTreeContext;
 import com.intellij.structuralsearch.plugin.replace.ReplaceOptions;
 import com.intellij.structuralsearch.plugin.util.CollectingMatchResultSink;
+import org.testng.reporters.Files;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 public abstract class ReplaceTestCase extends LightQuickFixTestCase {
     protected Matcher matcher;
@@ -26,7 +30,7 @@ public abstract class ReplaceTestCase extends LightQuickFixTestCase {
         matchOptions = new MatchOptions();
         matchOptions.setRecursiveSearch(true);
         replaceOptions = new ReplaceOptions(matchOptions);
-   }
+    }
 
     @Override
     protected void tearDown() throws Exception {
@@ -34,6 +38,26 @@ public abstract class ReplaceTestCase extends LightQuickFixTestCase {
         matchOptions = null;
         matcher = null;
         super.tearDown();
+    }
+
+    protected String readData(String fileName) {
+        try {
+            return Files.readFile(new File(getClass().getClassLoader().getResource(fileName).toURI()));
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected void runOnTestData(String fileName) {
+        String data = readData(fileName);
+        String[] parts = data.split("//\\s*={3,}\n");
+        assertEquals(5, parts.length);
+        String code = parts[0];
+        String pattern = parts[1];
+        String replacement = parts[2];
+        int expectMatches = Integer.parseInt(parts[3].split("//")[1].trim());
+        String result = parts[4];
+        assertEquals(result, replaceAll(code, pattern, replacement, expectMatches));
     }
 
     protected String replaceAll(String in, String pattern, String with, int expectResults) {
