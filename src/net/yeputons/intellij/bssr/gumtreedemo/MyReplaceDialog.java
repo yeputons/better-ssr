@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MyReplaceDialog extends ReplaceDialog {
-    private Map<String, Integer> types = new HashMap<>();
-
     public MyReplaceDialog(SearchContext searchContext) {
         super(searchContext);
     }
@@ -67,12 +65,13 @@ public class MyReplaceDialog extends ReplaceDialog {
             matchOptions.setScope(oldScope);
         }
 
+        Map<String, Integer> typesMapping = new HashMap<>();
         r.searchTreeContext = new TreeContext();
-        ITree searchTree = nodesToTree(r.searchTreeContext, r.searchPattern.getNodes());
+        ITree searchTree = nodesToTree(r.searchTreeContext, r.searchPattern.getNodes(), typesMapping);
         r.searchTreeContext.validate();
 
         r.replaceTreeContext = new TreeContext();
-        ITree replaceTree = nodesToTree(r.replaceTreeContext, r.replacePattern.getNodes());
+        ITree replaceTree = nodesToTree(r.replaceTreeContext, r.replacePattern.getNodes(), typesMapping);
         r.replaceTreeContext.validate();
 
         r.mappings = new MappingStore();
@@ -95,11 +94,11 @@ public class MyReplaceDialog extends ReplaceDialog {
         new MyReplaceCommand(myConfiguration, searchContext, r).startSearching();
     }
 
-    private ITree nodesToTree(TreeContext context, NodeIterator it) {
+    private static ITree nodesToTree(TreeContext context, NodeIterator it, Map<String, Integer> typesMapping) {
         ITree root = context.createTree(-1, "my_root", "my_root");
         context.setRoot(root);
         for (it.reset(); it.hasNext(); it.advance()) {
-            ITree newChild = elementToTree(context, it.current());
+            ITree newChild = elementToTree(context, it.current(), typesMapping);
             if (newChild != null) {
                 newChild.setParentAndUpdateChildren(root);
             }
@@ -126,7 +125,7 @@ public class MyReplaceDialog extends ReplaceDialog {
 //                (elem instanceof LeafPsiElement && elem.getText().equals(","));
     }
 
-    private ITree elementToTree(TreeContext context, PsiElement elem) {
+    private static ITree elementToTree(TreeContext context, PsiElement elem, Map<String, Integer> typesMapping) {
         if (ignorePsiElement(elem)) return null;
         String typeLabel;
         typeLabel = elem.getClass().getCanonicalName() + ";" + elem.getNode().getElementType().getIndex();
@@ -141,12 +140,12 @@ public class MyReplaceDialog extends ReplaceDialog {
         if (elem instanceof XmlToken || elem instanceof XmlText) {
             label = elem.getText().trim();
         }
-        int typeId = types.computeIfAbsent(typeLabel, key -> types.size());
+        int typeId = typesMapping.computeIfAbsent(typeLabel, key -> typesMapping.size());
 
         ITree treeNode = context.createTree(typeId, label, typeLabel);
         treeNode.setMetadata("psi", elem);
         for (PsiElement elemChild = elem.getFirstChild(); elemChild != null; elemChild = elemChild.getNextSibling()) {
-            ITree newTreeChild = elementToTree(context, elemChild);
+            ITree newTreeChild = elementToTree(context, elemChild, typesMapping);
             if (newTreeChild != null) {
                 newTreeChild.setParentAndUpdateChildren(treeNode);
             }
