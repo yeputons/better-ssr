@@ -24,28 +24,27 @@ public class MyReplacer {
     }
 
     public void performReplacement(SyntacticalMatchResult syntacticalMatchPattern) {
-        BidirectionalMap<PsiElement, PsiElement> oldSearchPatternToNew =
-                getCompiledPatternsMapping(replacement.searchPattern, syntacticalMatchPattern.getCompiledPattern());
+        replacement.remapSearchPattern(syntacticalMatchPattern.getCompiledPattern());
 
-        BidirectionalMap<PsiElement, ITree> oldSearchToItree = collectPsiElementsMapping(replacement.searchTreeContext.getRoot());
+        BidirectionalMap<PsiElement, ITree> searchToItree = collectPsiElementsMapping(replacement.searchTreeContext.getRoot());
         BidirectionalMap<PsiElement, ITree> replaceToItree = collectPsiElementsMapping(replacement.replaceTreeContext.getRoot());
 
-        Map<PsiElement, List<SmartPsiPointer>> newSearchToMatch = collectSyntacticalMatches(syntacticalMatchPattern);
+        Map<PsiElement, List<SmartPsiPointer>> searchToMatch = collectSyntacticalMatches(syntacticalMatchPattern);
 
         // Try to extend matches.
         for (;;) {
             Set<PsiElement> matchedElements = new HashSet<>();
-            for (Map.Entry<PsiElement, List<SmartPsiPointer>> entry : newSearchToMatch.entrySet()) {
+            for (Map.Entry<PsiElement, List<SmartPsiPointer>> entry : searchToMatch.entrySet()) {
                 for (SmartPsiPointer element : entry.getValue()) {
                     matchedElements.add(element.getElement());
                 }
             }
 
-            Map<PsiElement, List<SmartPsiPointer>> extraNewSearchToMatch = new HashMap<>();
-            for (Map.Entry<PsiElement, List<SmartPsiPointer>> reliableMatch : newSearchToMatch.entrySet()) {
+            Map<PsiElement, List<SmartPsiPointer>> extraSearchToMatch = new HashMap<>();
+            for (Map.Entry<PsiElement, List<SmartPsiPointer>> reliableMatch : searchToMatch.entrySet()) {
                 Map<Class, List<PsiElement>> searchChildProfile = new HashMap<>();
                 for (PsiElement child : reliableMatch.getKey().getChildren()) {
-                    if (!newSearchToMatch.containsKey(child)) {
+                    if (!searchToMatch.containsKey(child)) {
                         searchChildProfile.computeIfAbsent(child.getClass(), x -> new ArrayList<>()).add(child);
                     }
                 }
@@ -79,27 +78,27 @@ public class MyReplacer {
                         List<PsiElement> currentChildren = entry.getValue();
                         assert searchChildren.size() == currentChildren.size();
                         for (int i = 0; i < searchChildren.size(); i++) {
-                            extraNewSearchToMatch.computeIfAbsent(searchChildren.get(i), x -> new ArrayList<>()).add(new SmartPsiPointer(currentChildren.get(i)));
+                            extraSearchToMatch.computeIfAbsent(searchChildren.get(i), x -> new ArrayList<>()).add(new SmartPsiPointer(currentChildren.get(i)));
                         }
                     }
                 }
             }
-            if (extraNewSearchToMatch.isEmpty()) {
+            if (extraSearchToMatch.isEmpty()) {
                 break;
             }
-            for (Map.Entry<PsiElement, List<SmartPsiPointer>> entry : extraNewSearchToMatch.entrySet()) {
-                assert !newSearchToMatch.containsKey(entry.getKey());
-                newSearchToMatch.put(entry.getKey(), entry.getValue());
+            for (Map.Entry<PsiElement, List<SmartPsiPointer>> entry : extraSearchToMatch.entrySet()) {
+                assert !searchToMatch.containsKey(entry.getKey());
+                searchToMatch.put(entry.getKey(), entry.getValue());
             }
         }
 
-        MultiMap<PsiElement, PsiElement> matchToNewSearch = new MultiMap<>();
-        for (Map.Entry<PsiElement, List<SmartPsiPointer>> entry : newSearchToMatch.entrySet()) {
+        MultiMap<PsiElement, PsiElement> matchToSearch = new MultiMap<>();
+        for (Map.Entry<PsiElement, List<SmartPsiPointer>> entry : searchToMatch.entrySet()) {
             for (SmartPsiPointer element : entry.getValue()) {
-                if (matchToNewSearch.containsKey(element.getElement())) {
-                    //assert matchToNewSearch.get(element.getElement()) == entry.getKey();
+                if (matchToSearch.containsKey(element.getElement())) {
+                    //assert matchToSearch.get(element.getElement()) == entry.getKey();
                 }
-                matchToNewSearch.putValue(element.getElement(), entry.getKey());
+                matchToSearch.putValue(element.getElement(), entry.getKey());
             }
         }
 
@@ -112,10 +111,10 @@ public class MyReplacer {
             }
             ITree searchItree = replacement.mappings.getSrc(replaceItree);
             if (searchItree != null) {
-                PsiElement newSearchNode = oldSearchPatternToNew.get(oldSearchToItree.getKeysByValue(searchItree).get(0));
-                assert newSearchNode != null;
-                if (newSearchToMatch.containsKey(newSearchNode)) {
-                    return newSearchToMatch.get(newSearchNode);
+                PsiElement searchNode = searchToItree.getKeysByValue(searchItree).get(0);
+                assert searchNode != null;
+                if (searchToMatch.containsKey(searchNode)) {
+                    return searchToMatch.get(searchNode);
                 }
             }
             return null;
@@ -140,9 +139,9 @@ public class MyReplacer {
                 }
             }
 
-            private void removeSubtrees(List<PsiElement> oldSearchNodes) {
-                for (PsiElement oldSearchNode : oldSearchNodes) {
-                    removeSubtrees(oldSearchNode);
+            private void removeSubtrees(List<PsiElement> searchNodes) {
+                for (PsiElement searchNode : searchNodes) {
+                    removeSubtrees(searchNode);
                 }
             }
 
@@ -201,9 +200,9 @@ public class MyReplacer {
                         ITree searchParentItree = replacement.mappings.getSrc(replaceItree.getParent());
                         assert searchParentItree  != null;
 
-                        PsiElement newSearchParentNode = oldSearchPatternToNew.get(oldSearchToItree.getKeysByValue(searchParentItree).get(0));
-                        assert newSearchParentNode != null;
-                        List<SmartPsiPointer> parents = newSearchToMatch.get(newSearchParentNode);
+                        PsiElement searchParentNode = searchToItree.getKeysByValue(searchParentItree).get(0);
+                        assert searchParentNode != null;
+                        List<SmartPsiPointer> parents = searchToMatch.get(searchParentNode);
                         if (parents != null) {
                             for (SmartPsiPointer parent : parents) {
                                 PsiElement added = parent.getElement().add(replaceNode.copy());
@@ -238,8 +237,8 @@ public class MyReplacer {
                 if (replacement.mappings.hasDst(replaceItree)) {
                     ITree searchItree = replacement.mappings.getSrc(replaceItree);
                     if (!replaceItree.getLabel().equals(searchItree.getLabel())) {
-                        PsiElement newSearchNode = oldSearchPatternToNew.get((PsiElement) searchItree.getMetadata("psi"));
-                        for (SmartPsiPointer smartNode : newSearchToMatch.get(newSearchNode)) {
+                        PsiElement searchNode = (PsiElement) searchItree.getMetadata("psi");
+                        for (SmartPsiPointer smartNode : searchToMatch.get(searchNode)) {
                             PsiElement oldNode = replaceNode;
                             PsiElement newNode = smartNode.getElement().replace(replaceNode);
                             if (oldNode != newNode) {
@@ -247,8 +246,8 @@ public class MyReplacer {
                             }
                         }
                     } else if (replacement.mappings.getDst(searchItree.getParent()) != replaceItree.getParent()) {
-                        PsiElement newSearchNode = oldSearchPatternToNew.get((PsiElement)searchItree.getMetadata("psi"));
-                        List<SmartPsiPointer> toMove = newSearchToMatch.get(newSearchNode);
+                        PsiElement searchNode = (PsiElement)searchItree.getMetadata("psi");
+                        List<SmartPsiPointer> toMove = searchToMatch.get(searchNode);
                         if (toMove == null) toMove = Collections.emptyList();
                         List<SmartPsiPointer> atPlace = addedElements.get(replaceItree);
                         assert atPlace != null;
@@ -299,10 +298,10 @@ public class MyReplacer {
             }
 
             private void renameNodeAndDescendants(PsiElement oldMatch, PsiElement newMatch) {
-                if (matchToNewSearch.containsKey(oldMatch)) {
-                    for (PsiElement newSearch : matchToNewSearch.get(oldMatch)) {
-                        matchToNewSearch.putValue(newMatch, newSearch);
-                        List<SmartPsiPointer> list = newSearchToMatch.get(newSearch);
+                if (matchToSearch.containsKey(oldMatch)) {
+                    for (PsiElement searchNode : matchToSearch.get(oldMatch)) {
+                        matchToSearch.putValue(newMatch, searchNode);
+                        List<SmartPsiPointer> list = searchToMatch.get(searchNode);
                         assert list != null;
                         for (int i = 0; i < list.size(); i++) {
                             if (list.get(i).getElement() == oldMatch) {
@@ -310,7 +309,7 @@ public class MyReplacer {
                             }
                         }
                     }
-                    matchToNewSearch.remove(oldMatch);
+                    matchToSearch.remove(oldMatch);
                 }
                 if (addedElementToITree.containsKey(oldMatch)) {
                     for (ITree tree : addedElementToITree.get(oldMatch)) {
@@ -333,15 +332,13 @@ public class MyReplacer {
                 }
             }
 
-            private void removeSubtrees(PsiElement oldSearchNode) {
-                if (MyReplacementCompiler.ignorePsiElement(oldSearchNode)) return;
-                PsiElement newSearchNode = oldSearchPatternToNew.get(oldSearchNode);
-                assert newSearchNode != null;
-                ITree searchItree = oldSearchToItree.get(oldSearchNode);
+            private void removeSubtrees(PsiElement searchNode) {
+                if (MyReplacementCompiler.ignorePsiElement(searchNode)) return;
+                ITree searchItree = searchToItree.get(searchNode);
                 assert searchItree != null;
                 if (!replacement.mappings.hasSrc(searchItree)) {
                     // Remove subtree
-                    List<SmartPsiPointer> occurrences = newSearchToMatch.get(newSearchNode);
+                    List<SmartPsiPointer> occurrences = searchToMatch.get(searchNode);
                     if (occurrences != null) {
                         for (SmartPsiPointer smartNode : occurrences) {
                             PsiElement node = smartNode.getElement();
@@ -353,7 +350,7 @@ public class MyReplacer {
                     // If we're unable to delete whole subtree, it's worth
                     // trying to delete some of its subtrees
                 }
-                removeSubtrees(Arrays.asList(oldSearchNode.getChildren()));
+                removeSubtrees(Arrays.asList(searchNode.getChildren()));
             }
         }.run();
     }
