@@ -120,7 +120,7 @@ public class MyReplacementCompiler {
         String label = typeLabel + ":";
         if (elem instanceof PsiJavaToken || elem instanceof LeafPsiElement) {
             assert elem.getFirstChild() == null;
-            label = elem.toString();
+            label = elem.getText();
         }
         if (elem instanceof XmlToken || elem instanceof XmlText) {
             label = elem.getText().trim();
