@@ -39,14 +39,12 @@ public class MyClass {
     @interface Baz { int z(); }
     @interface Bar { int y(); }
 
-    @Foo(x = 10)
-    @Bar(y = 3)
+    @Foo(x = 10)@Bar(y = 3)
     @Baz(z = 10)
     void m1a() {}
 
     @Baz(z = 10)
-    @Foo(x = 10)
-    @Bar(y = 3)
+    @Foo(x = 10)@Bar(y = 3)
     void m1b() {}
 
     @Foo(x = 10)
