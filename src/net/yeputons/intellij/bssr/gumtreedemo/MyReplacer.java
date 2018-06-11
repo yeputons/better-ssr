@@ -249,6 +249,7 @@ public class MyReplacer {
                     } else if (replacement.mappings.getDst(searchItree.getParent()) != replaceItree.getParent()) {
                         PsiElement newSearchNode = oldSearchPatternToNew.get((PsiElement)searchItree.getMetadata("psi"));
                         List<SmartPsiPointer> toMove = newSearchToMatch.get(newSearchNode);
+                        if (toMove == null) toMove = Collections.emptyList();
                         List<SmartPsiPointer> atPlace = addedElements.get(replaceItree);
                         assert atPlace != null;
                         for (SmartPsiPointer smartNewNode : atPlace) {
@@ -275,8 +276,15 @@ public class MyReplacer {
                             } else {
                                 PsiElement lastAdded = newNode;
                                 lastAdded = newNode.replace(oldNodes.get(0));
+                                if (oldNodes.get(0) != lastAdded) {
+                                    renameNodeAndDescendants(oldNodes.get(0), lastAdded);
+                                }
                                 for (int i = 1; i < oldNodes.size(); i++) {
-                                    lastAdded = lastAdded .getParent().addAfter(oldNodes.get(i).copy(), lastAdded);
+                                    PsiElement oldNode = oldNodes.get(i);
+                                    lastAdded = lastAdded.getParent().addAfter(oldNode, lastAdded);
+                                    if (oldNode != lastAdded) {
+                                        renameNodeAndDescendants(oldNode, lastAdded);
+                                    }
                                 }
                             }
                             for (PsiElement oldNode : oldNodes) {
