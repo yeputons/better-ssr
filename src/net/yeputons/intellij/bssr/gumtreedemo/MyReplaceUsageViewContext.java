@@ -37,15 +37,15 @@ public class MyReplaceUsageViewContext extends UsageViewContext {
 
     @Override
     protected void configureActions() {
-//        this.myUsageView.addButtonToLowerPane(() -> {
-//            this.replace(this.myUsageView.getSortedUsages());
-//        }, SSRBundle.message("do.replace.all.button", new Object[0]));
         this.myUsageView.addButtonToLowerPane(() -> {
-            this.replace(this.myUsageView.getSelectedUsages());
+            this.replace(this.myUsageView.getSortedUsages());
+        }, SSRBundle.message("do.replace.all.button", new Object[0]));
+        this.myUsageView.addButtonToLowerPane(() -> {
+            this.replace(new ArrayList<>(this.myUsageView.getSelectedUsages()));
         }, SSRBundle.message("replace.selected.button", new Object[0]));
     }
 
-    private void replace(Set<Usage> selectedUsages) {
+    private void replace(List<Usage> selectedUsages) {
         final LocalHistoryAction localHistoryAction = LocalHistory.getInstance().startAction("Gum Tree Structural Replace");
         MyReplacer replacer = new MyReplacer(replacement);
         try {
