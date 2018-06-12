@@ -238,7 +238,7 @@ public class MyReplacer {
                     ITree searchItree = replacement.mappings.getSrc(replaceItree);
                     if (!replaceItree.getLabel().equals(searchItree.getLabel())) {
                         PsiElement searchNode = (PsiElement) searchItree.getMetadata("psi");
-                        for (SmartPsiPointer smartNode : searchToMatch.get(searchNode)) {
+                        for (SmartPsiPointer smartNode : searchToMatch.getOrDefault(searchNode, Collections.emptyList())) {
                             PsiElement oldNode = replaceNode;
                             PsiElement newNode = smartNode.getElement().replace(replaceNode);
                             if (oldNode != newNode) {
@@ -247,17 +247,15 @@ public class MyReplacer {
                         }
                     } else if (replacement.mappings.getDst(searchItree.getParent()) != replaceItree.getParent()) {
                         PsiElement searchNode = (PsiElement)searchItree.getMetadata("psi");
-                        List<SmartPsiPointer> toMove = searchToMatch.get(searchNode);
-                        if (toMove == null) toMove = Collections.emptyList();
-                        List<SmartPsiPointer> atPlace = addedElements.get(replaceItree);
-                        assert atPlace != null;
+                        List<SmartPsiPointer> toMove = searchToMatch.getOrDefault(searchNode, Collections.emptyList());
+                        List<SmartPsiPointer> atPlace = addedElements.getOrDefault(replaceItree, Collections.emptyList());
                         for (SmartPsiPointer smartNewNode : atPlace) {
                             PsiElement newNode = smartNewNode.getElement();
                             PsiElement matchRoot = newNode;
                             while (true) {
                                 PsiElement newMatchRoot = matchRoot.getParent();
                                 if (newMatchRoot == null) break;
-                                long cnt = atPlace.stream().filter(x -> PsiTreeUtil.isAncestor(newMatchRoot, x.getElement(), false)).count();
+                                long cnt = atPlace.stream().filter(x -> x.getElement() != null && PsiTreeUtil.isAncestor(newMatchRoot, x.getElement(), false)).count();
                                 assert cnt >= 1;
                                 if (cnt > 1) break;
                                 matchRoot = newMatchRoot;
