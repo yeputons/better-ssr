@@ -7,7 +7,6 @@ import com.intellij.dupLocator.iterators.NodeIterator;
 import com.intellij.dupLocator.iterators.SiblingNodeIterator;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.structuralsearch.SyntacticalMatchResult;
 import com.intellij.structuralsearch.impl.matcher.CompiledPattern;
 import com.intellij.structuralsearch.plugin.util.SmartPsiPointer;
 import com.intellij.util.containers.BidirectionalMap;

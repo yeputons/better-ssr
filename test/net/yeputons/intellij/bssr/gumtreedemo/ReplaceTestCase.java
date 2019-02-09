@@ -6,7 +6,6 @@ import com.intellij.psi.search.LocalSearchScope;
 import com.intellij.structuralsearch.MatchOptions;
 import com.intellij.structuralsearch.MatchResult;
 import com.intellij.structuralsearch.Matcher;
-import com.intellij.structuralsearch.SyntacticalMatchResult;
 import com.intellij.structuralsearch.impl.matcher.MatcherImplUtil;
 import com.intellij.structuralsearch.impl.matcher.PatternTreeContext;
 import com.intellij.structuralsearch.plugin.replace.ReplaceOptions;
@@ -20,6 +19,7 @@ import java.net.URISyntaxException;
 
 public abstract class ReplaceTestCase extends LightQuickFixTestCase {
     protected Matcher matcher;
+    protected SyntacticalMatchResultBuilder builder;
     protected MatchOptions matchOptions;
     protected ReplaceOptions replaceOptions;
 
@@ -28,6 +28,8 @@ public abstract class ReplaceTestCase extends LightQuickFixTestCase {
         super.setUp();
 
         matcher = new Matcher(getProject());
+        builder = new SyntacticalMatchResultBuilder();
+        matcher.addListener(builder);
         matchOptions = new MatchOptions();
         matchOptions.setRecursiveSearch(true);
         replaceOptions = new ReplaceOptions(matchOptions);
@@ -75,7 +77,7 @@ public abstract class ReplaceTestCase extends LightQuickFixTestCase {
 
         assertEquals(expectResults, sink.getMatches().size());
         for (MatchResult match : sink.getMatches()) {
-            SyntacticalMatchResult syntacticalMatch = match.getSyntacticalMatch();
+            SyntacticalMatchResult syntacticalMatch = builder.getMatchResults().get(match);
             assertNotNull(syntacticalMatch);
             replacer.performReplacement(syntacticalMatch);
         }

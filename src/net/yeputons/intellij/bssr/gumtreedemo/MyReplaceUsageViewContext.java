@@ -5,7 +5,6 @@ import com.intellij.history.LocalHistoryAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.structuralsearch.MatchResult;
 import com.intellij.structuralsearch.SSRBundle;
-import com.intellij.structuralsearch.SyntacticalMatchResult;
 import com.intellij.structuralsearch.impl.matcher.MatchResultImpl;
 import com.intellij.structuralsearch.plugin.ui.Configuration;
 import com.intellij.structuralsearch.plugin.ui.SearchContext;
@@ -20,10 +19,12 @@ public class MyReplaceUsageViewContext extends UsageViewContext {
     private final HashMap<Usage, MatchResult> usage2MatchResult = new HashMap<>();
     private UsageView myUsageView;
     private CompiledReplacement replacement;
+    private Map<MatchResult, SyntacticalMatchResult> matchResults;
 
-    protected MyReplaceUsageViewContext(SearchContext searchContext, Configuration configuration, Runnable searchStarter, CompiledReplacement replacement) {
+    protected MyReplaceUsageViewContext(SearchContext searchContext, Configuration configuration, Runnable searchStarter, CompiledReplacement replacement, Map<MatchResult, SyntacticalMatchResult> matchResults) {
         super(configuration, searchContext, searchStarter);
         this.replacement = replacement;
+        this.matchResults = matchResults;
     }
 
     @Override
@@ -52,7 +53,8 @@ public class MyReplaceUsageViewContext extends UsageViewContext {
             WriteCommandAction.runWriteCommandAction(mySearchContext.getProject(), () -> {
                 for (Usage usage : selectedUsages) {
                     MatchResultImpl matchResult = (MatchResultImpl) usage2MatchResult.get(usage);
-                    @NotNull SyntacticalMatchResult syntacticalMatchPattern = matchResult.getSyntacticalMatch();
+                    @NotNull SyntacticalMatchResult syntacticalMatchPattern = matchResults.get(matchResult);
+                    assert syntacticalMatchPattern != null;
                     replacer.performReplacement(syntacticalMatchPattern);
                 }
             });

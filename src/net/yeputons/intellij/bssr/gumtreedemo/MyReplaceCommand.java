@@ -12,18 +12,20 @@ import com.intellij.usages.Usage;
 public class MyReplaceCommand extends SearchCommand {
     private MyReplaceUsageViewContext myReplaceUsageViewContext;
     private MatchingProcess myProcess;
+    private final SyntacticalMatchResultBuilder syntacticalMatchResultBuilder = new SyntacticalMatchResultBuilder();
     CompiledReplacement replacement;
 
     public MyReplaceCommand(Configuration configuration, SearchContext searchContext, CompiledReplacement replacement) {
         super(configuration, searchContext);
         this.replacement = replacement;
+        this.addListener(syntacticalMatchResultBuilder);
     }
 
     protected UsageViewContext createUsageViewContext() {
         Runnable searchStarter = () -> {
             (new ReplaceCommand(this.myConfiguration, this.mySearchContext)).startSearching();
         };
-        this.myReplaceUsageViewContext = new MyReplaceUsageViewContext(this.mySearchContext, this.myConfiguration, searchStarter, replacement);
+        this.myReplaceUsageViewContext = new MyReplaceUsageViewContext(this.mySearchContext, this.myConfiguration, searchStarter, replacement, syntacticalMatchResultBuilder.getMatchResults());
         return this.myReplaceUsageViewContext;
     }
 
