@@ -9,7 +9,7 @@ import com.intellij.structuralsearch.plugin.ui.SearchContext;
 public class DemoAction extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent event) {
-        final SearchContext searchContext = SearchContext.buildFromDataContext(event.getDataContext());
+        final SearchContext searchContext = new SearchContext(event.getDataContext());
         final Project project = searchContext.getProject();
         if (project == null) {
             return;
